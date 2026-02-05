@@ -43,10 +43,31 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     return c.codeUnitAt(0) >= 48 && c.codeUnitAt(0) <= 57;
   }
 
+  bool _esDigitoOPunto(String c) {
+    return _esDigito(c) || c == '.';
+  }
+
   bool _puedeAgregarOperador() {
     if (_pantalla.isEmpty) return false;
     final ultimo = _pantalla[_pantalla.length - 1];
     return _esDigito(ultimo) || ultimo == ')';
+  }
+
+  bool _puedeAgregarPunto() {
+    if (_pantalla.isEmpty) return true;
+    final ultimo = _pantalla[_pantalla.length - 1];
+    if (ultimo == ')') return false;
+    if (_esOperador(ultimo) || ultimo == '(') return true;
+    if (!_esDigito(ultimo)) return false;
+
+    for (int i = _pantalla.length - 1; i >= 0; i--) {
+      final c = _pantalla[i];
+      if (_esOperador(c) || c == '(' || c == ')') {
+        break;
+      }
+      if (c == '.') return false;
+    }
+    return true;
   }
 
   bool _puedeAgregarParentesisDerecho() {
@@ -60,7 +81,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     if (_pantalla.isEmpty) return false;
     if (_parentesisAbiertos != 0) return false;
     final ultimo = _pantalla[_pantalla.length - 1];
-    if (_esOperador(ultimo) || ultimo == '(') return false;
+    if (_esOperador(ultimo) || ultimo == '(' || ultimo == '.') return false;
     return true;
   }
 
@@ -115,6 +136,19 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         return;
       }
 
+      if (valor == '.') {
+        if (_puedeAgregarPunto()) {
+          if (_pantalla.isEmpty ||
+              _esOperador(_pantalla[_pantalla.length - 1]) ||
+              _pantalla.endsWith('(')) {
+            _pantalla += '0.';
+          } else {
+            _pantalla += '.';
+          }
+        }
+        return;
+      }
+
       if (_pantalla == 'Error') {
         _limpiar();
       }
@@ -156,7 +190,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   double _leerNumero() {
     _saltarEspacios();
     final inicio = _indice;
-    while (_indice < _texto.length && _esDigito(_texto[_indice])) {
+    bool yaTienePunto = false;
+    while (_indice < _texto.length && _esDigitoOPunto(_texto[_indice])) {
+      if (_texto[_indice] == '.') {
+        if (yaTienePunto) {
+          break;
+        }
+        yaTienePunto = true;
+      }
       _indice++;
     }
     if (inicio == _indice) {
@@ -292,7 +333,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         ]),
         _buildRow([
           const _KeySpec('0'),
-          const _KeySpec('=', color: Color(0xFF388E3C), flex: 3),
+          const _KeySpec('.'),
+          const _KeySpec('=', color: Color(0xFF388E3C), flex: 2),
         ]),
       ],
     );
@@ -313,6 +355,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           const _KeySpec('7'),
           const _KeySpec('8'),
           const _KeySpec('9'),
+          const _KeySpec('.'),
         ]),
         _buildRow([
           const _KeySpec('C', color: Color(0xFFD32F2F)),
