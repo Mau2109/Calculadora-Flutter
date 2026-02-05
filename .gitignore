@@ -1,0 +1,17 @@
+# Ignorar TODO
+*
+
+# Permitir carpetas importantes
+!lib/
+!lib/**
+
+# Permitir archivos del nivel raíz
+!.gitignore
+!pubspec.yaml
+!pubspec.lock
+!README.md
+!analysis_options.yaml
+
+# (Opcional) permitir carpeta test si quieres
+#!test/
+#!test/**
